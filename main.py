@@ -1,9 +1,7 @@
 import gi
-
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-DEBUG_MODE = False
 PUZZLE_SIZE = 3
 
 class AppWindow(Gtk.Window):
@@ -46,18 +44,14 @@ class AppWindow(Gtk.Window):
         
         self.button_list = []
         self.blankindex = 0
-        final = [1, 2, 3, 4, 5, 6, 7, 8, ""]
         
         for x in range(PUZZLE_SIZE):
             for y in range(PUZZLE_SIZE):
                 index = x * PUZZLE_SIZE + y
 
-                if DEBUG_MODE:
-                    txtlabel = str(final[index])
-                else:
-                    txtlabel = ""
-                    if self.input_list[index] != 0:
-                        txtlabel = str(self.input_list[index])
+                txtlabel = ""
+                if self.input_list[index] != 0:
+                    txtlabel = str(self.input_list[index])
 
                 self.button_list.append(Gtk.Button(label=txtlabel))
                 self.button_list[index].set_sensitive(False)
@@ -74,7 +68,6 @@ class AppWindow(Gtk.Window):
         with open("puzzle.in","r") as file:
             lines = file.readlines()
             for x in lines:
-                # print(x)
                 row = x.split()
                 if len(row) != PUZZLE_SIZE:
                     return False
@@ -100,7 +93,6 @@ class AppWindow(Gtk.Window):
             if integer-1 == integerindex:
                 continue
             
-            # print("new swap")
             for swap in range(integerindex,integer-1,-1):
                 temp = in_list[swap]
                 in_list[swap] = in_list[swap-1]
@@ -148,7 +140,7 @@ class AppWindow(Gtk.Window):
         self.button_list[self.blankindex].set_label(clickedlabel)
         self.button_list[clickedindex].set_label("")
         if self.check_puzzle():
-            print("grats winner ka bhie")
+            self.lblSolvable.set_label("You Won!")
             for b in self.button_list:
                 b.set_sensitive(False)
         else:
@@ -163,10 +155,7 @@ class AppWindow(Gtk.Window):
     
     # EXER 2 Stuff
     
-    
-    
     # EXER 3 Stuff
-
 
 win = AppWindow()
 win.connect("destroy", Gtk.main_quit)
