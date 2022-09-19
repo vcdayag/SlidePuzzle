@@ -1,8 +1,10 @@
 import gi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 PUZZLE_SIZE = 3
+
 
 class AppWindow(Gtk.Window):
     def __init__(self):
@@ -12,7 +14,7 @@ class AppWindow(Gtk.Window):
             default_height=300,
             border_width=10
         )
-        
+
         ui_grid = Gtk.Grid(
             column_spacing=1,
             row_spacing=3,
@@ -20,7 +22,7 @@ class AppWindow(Gtk.Window):
             column_homogeneous=True,
         )
         self.add(ui_grid)
-        
+
         PUZZLE_GRID_SPACING = 2
         puzzle_grid = Gtk.Grid(
             column_spacing=PUZZLE_GRID_SPACING,
@@ -28,24 +30,25 @@ class AppWindow(Gtk.Window):
             row_homogeneous=True,
             column_homogeneous=True,
         )
-        
+
         lbltitle = Gtk.Label(label="3x3 Slide Puzzle")
         self.lblSolvable = Gtk.Label()
-        
+
         ui_grid.attach(lbltitle, 0, 0, 1, 1)
         ui_grid.attach(self.lblSolvable, 0, 1, 1, 1)
         ui_grid.attach(puzzle_grid, 0, 2, 1, 1)
-        
+
         self.input_list = []
         if not self.load_file():
             import random
+
             self.input_list = list(range(PUZZLE_SIZE**2))
             random.shuffle(self.input_list)
-        
+
         self.current_tile_arrangement = self.input_list[:]
         self.button_list = []
         self.blankindex = 0
-        
+
         for x in range(PUZZLE_SIZE):
             for y in range(PUZZLE_SIZE):
                 index = x * PUZZLE_SIZE + y
@@ -58,16 +61,16 @@ class AppWindow(Gtk.Window):
                 self.button_list[index].set_sensitive(False)
                 self.button_list[index].connect("clicked", self.button_clicked)
                 puzzle_grid.attach(self.button_list[index], y, x, 1, 1)
-        
+
         if self.check_solvable():
             self.lblSolvable.set_label("Solvable")
             self.clickable_buttons()
-            self.bfsearch()
+            self.DFSearch()
         else:
             self.lblSolvable.set_label("Not Solvable")
-    
+
     def load_file(self):
-        with open("puzzle.in","r") as file:
+        with open("puzzle.in", "r") as file:
             lines = file.readlines()
             for x in lines:
                 row = x.split()
@@ -79,37 +82,35 @@ class AppWindow(Gtk.Window):
         if len(self.input_list) != PUZZLE_SIZE**2:
             return False
         return True
-        
-    
+
     def check_solvable(self):
         in_list = self.input_list[:]
         blnkindex = self.input_list.index(0)
         x = blnkindex % PUZZLE_SIZE
         y = blnkindex // PUZZLE_SIZE
-        movestooriginal = (PUZZLE_SIZE**2)-1-(x+y)
-        
-        iseven = True if movestooriginal%2 == 0 else False
+        movestooriginal = (PUZZLE_SIZE**2) - 1 - (x + y)
+
+        iseven = True if movestooriginal % 2 == 0 else False
         moves = 0
-        for integer in range(1,PUZZLE_SIZE**2):
+        for integer in range(1, PUZZLE_SIZE**2):
             integerindex = in_list.index(integer)
-            if integer-1 == integerindex:
+            if integer - 1 == integerindex:
                 continue
-            
-            for swap in range(integerindex,integer-1,-1):
+
+            for swap in range(integerindex, integer - 1, -1):
                 temp = in_list[swap]
-                in_list[swap] = in_list[swap-1]
-                in_list[swap-1] = temp
+                in_list[swap] = in_list[swap - 1]
+                in_list[swap - 1] = temp
                 moves += 1
                 # print(in_list)
-        
+
         # print(moves)
-        if iseven == (moves%2 == 0):
+        if iseven == (moves % 2 == 0):
             self.lblSolvable.set_label("Solvable")
             return True
         else:
             self.lblSolvable.set_label("Not Solvable")
             return False
-            
 
     def clickable_buttons(self):
         # enable button that is beside the blank
@@ -141,13 +142,13 @@ class AppWindow(Gtk.Window):
         clickedlabel = self.button_list[clickedindex].get_label()
         self.button_list[self.blankindex].set_label(clickedlabel)
         self.button_list[clickedindex].set_label("")
-        
+
         self.current_tile_arrangement[self.blankindex] = int(clickedlabel)
         self.current_tile_arrangement[clickedindex] = 0
         self.blankindex = clickedindex
-        
+
         print(self.current_tile_arrangement)
-        
+
         if self.check_puzzle():
             self.lblSolvable.set_label("You Won!")
             for b in self.button_list:
@@ -161,62 +162,137 @@ class AppWindow(Gtk.Window):
             if self.button_list[i].get_label() != str(final[i]):
                 return False
         return True
-    
+
     # EXER 2 Stuff
-    
-    def GoalTest(self,inputList):
-        final = list(range(1,PUZZLE_SIZE**2))
+
+    def GoalTest(self, inputList):
+        final = list(range(1, PUZZLE_SIZE**2))
         final.append(0)
         return inputList == final
-    
-    def Actions(self,inputList):
+
+    def Actions(self, inputState):
         fronteir = []
-        currentBlankIndex = inputList.index(0)
+        currentBlankIndex = inputState["empty_loc"]
         x = currentBlankIndex % PUZZLE_SIZE
         y = currentBlankIndex // PUZZLE_SIZE
         if y - 1 >= 0 and y - 1 < PUZZLE_SIZE:
-            temp = inputList[:]
+            temp = inputState["puzzle"][:]
             temp[currentBlankIndex] = temp[currentBlankIndex - PUZZLE_SIZE]
             temp[currentBlankIndex - PUZZLE_SIZE] = 0
-            fronteir.append(temp)
+            state_record = {
+                "puzzle": temp[:],
+                "empty_loc": currentBlankIndex - PUZZLE_SIZE,
+                "action": "U",
+                "parent": inputState,
+            }
+            fronteir.append(state_record)
         if x + 1 >= 0 and x + 1 < PUZZLE_SIZE:
-            temp = inputList[:]
+            temp = inputState["puzzle"][:]
             temp[currentBlankIndex] = temp[currentBlankIndex + 1]
             temp[currentBlankIndex + 1] = 0
-            fronteir.append(temp)
+            state_record = {
+                "puzzle": temp[:],
+                "empty_loc": currentBlankIndex + 1,
+                "action": "R",
+                "parent": inputState,
+            }
+            fronteir.append(state_record)
         if y + 1 >= 0 and y + 1 < PUZZLE_SIZE:
-            temp = inputList[:]
+            temp = inputState["puzzle"][:]
             temp[currentBlankIndex] = temp[currentBlankIndex + PUZZLE_SIZE]
             temp[currentBlankIndex + PUZZLE_SIZE] = 0
-            fronteir.append(temp)
+            state_record = {
+                "puzzle": temp[:],
+                "empty_loc": currentBlankIndex + PUZZLE_SIZE,
+                "action": "D",
+                "parent": inputState,
+            }
+            fronteir.append(state_record)
         if x - 1 >= 0 and x - 1 < PUZZLE_SIZE:
-            temp = inputList[:]
+            temp = inputState["puzzle"][:]
             temp[currentBlankIndex] = temp[currentBlankIndex - 1]
             temp[currentBlankIndex - 1] = 0
-            fronteir.append(temp)
+            state_record = {
+                "puzzle": temp[:],
+                "empty_loc": currentBlankIndex - 1,
+                "action": "L",
+                "parent": inputState,
+            }
+            fronteir.append(state_record)
         return fronteir
-    
-    def bfsearch(self):
-        # get initial state
-        fronteir = [self.current_tile_arrangement[:]]
+
+    def BFSearch(self):
+        # initial state
+        fronteir = [
+            {
+                "puzzle": self.current_tile_arrangement[:],
+                "empty_loc": self.blankindex,
+                "action": None,
+                "parent": None,
+            }
+        ]
         explored = []
         turns = 0
-        
-        while(len(fronteir) != 0):
+        while len(fronteir) != 0:
             currentState = fronteir.pop(0)
-            explored.append(currentState)
-            print(currentState)
+            explored.append(currentState["puzzle"])
             turns += 1
-            if(self.GoalTest(currentState)):
-                print(turns)
-                print("this is the goal bhie")
-                return 
+            if self.GoalTest(currentState["puzzle"]):
+                outputActions = []
+                while currentState["parent"] != None:
+                    outputActions.insert(0, currentState["action"])
+                    currentState = currentState["parent"]
+                # print("explored states: ",len(explored))
+                # print("path cost states: ",len(outputActions))
+                # print(outputActions)
+                with open("puzzle.out", "w") as puzzleOut:
+                    puzzleOut.write(" ".join(outputActions))
+                return currentState
             else:
                 for action in self.Actions(currentState):
-                    if(action not in explored and action not in fronteir):
+                    # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
+                    if action["puzzle"] not in explored and action["puzzle"] not in [
+                        x["puzzle"] for x in fronteir
+                    ]:
                         fronteir.append(action)
-        
+
+    def DFSearch(self):
+        # initial state
+        fronteir = [
+            {
+                "puzzle": self.current_tile_arrangement[:],
+                "empty_loc": self.blankindex,
+                "action": None,
+                "parent": None,
+            }
+        ]
+        explored = []
+        turns = 0
+        while len(fronteir) != 0:
+            currentState = fronteir.pop()
+            explored.append(currentState["puzzle"])
+            turns += 1
+            if self.GoalTest(currentState["puzzle"]):
+                outputActions = []
+                while currentState["parent"] != None:
+                    outputActions.insert(0, currentState["action"])
+                    currentState = currentState["parent"]
+                # print("explored states: ",len(explored))
+                # print("path cost states: ",len(outputActions))
+                # print(outputActions)
+                with open("puzzle.out", "w") as puzzleOut:
+                    puzzleOut.write(" ".join(outputActions))
+                return currentState
+            else:
+                for action in self.Actions(currentState):
+                    # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
+                    if action["puzzle"] not in explored and action["puzzle"] not in [
+                        x["puzzle"] for x in fronteir
+                    ]:
+                        fronteir.append(action)
+
     # EXER 3 Stuff
+
 
 win = AppWindow()
 win.connect("destroy", Gtk.main_quit)
