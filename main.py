@@ -42,6 +42,7 @@ class AppWindow(Gtk.Window):
             self.input_list = list(range(PUZZLE_SIZE**2))
             random.shuffle(self.input_list)
         
+        self.current_tile_arrangement = self.input_list[:]
         self.button_list = []
         self.blankindex = 0
         
@@ -61,6 +62,7 @@ class AppWindow(Gtk.Window):
         if self.check_solvable():
             self.lblSolvable.set_label("Solvable")
             self.clickable_buttons()
+            self.bfsearch()
         else:
             self.lblSolvable.set_label("Not Solvable")
     
@@ -139,6 +141,13 @@ class AppWindow(Gtk.Window):
         clickedlabel = self.button_list[clickedindex].get_label()
         self.button_list[self.blankindex].set_label(clickedlabel)
         self.button_list[clickedindex].set_label("")
+        
+        self.current_tile_arrangement[self.blankindex] = int(clickedlabel)
+        self.current_tile_arrangement[clickedindex] = 0
+        self.blankindex = clickedindex
+        
+        print(self.current_tile_arrangement)
+        
         if self.check_puzzle():
             self.lblSolvable.set_label("You Won!")
             for b in self.button_list:
@@ -155,6 +164,58 @@ class AppWindow(Gtk.Window):
     
     # EXER 2 Stuff
     
+    def GoalTest(self,inputList):
+        final = list(range(1,PUZZLE_SIZE**2))
+        final.append(0)
+        return inputList == final
+    
+    def Actions(self,inputList):
+        fronteir = []
+        currentBlankIndex = inputList.index(0)
+        x = currentBlankIndex % PUZZLE_SIZE
+        y = currentBlankIndex // PUZZLE_SIZE
+        if y - 1 >= 0 and y - 1 < PUZZLE_SIZE:
+            temp = inputList[:]
+            temp[currentBlankIndex] = temp[currentBlankIndex - PUZZLE_SIZE]
+            temp[currentBlankIndex - PUZZLE_SIZE] = 0
+            fronteir.append(temp)
+        if x + 1 >= 0 and x + 1 < PUZZLE_SIZE:
+            temp = inputList[:]
+            temp[currentBlankIndex] = temp[currentBlankIndex + 1]
+            temp[currentBlankIndex + 1] = 0
+            fronteir.append(temp)
+        if y + 1 >= 0 and y + 1 < PUZZLE_SIZE:
+            temp = inputList[:]
+            temp[currentBlankIndex] = temp[currentBlankIndex + PUZZLE_SIZE]
+            temp[currentBlankIndex + PUZZLE_SIZE] = 0
+            fronteir.append(temp)
+        if x - 1 >= 0 and x - 1 < PUZZLE_SIZE:
+            temp = inputList[:]
+            temp[currentBlankIndex] = temp[currentBlankIndex - 1]
+            temp[currentBlankIndex - 1] = 0
+            fronteir.append(temp)
+        return fronteir
+    
+    def bfsearch(self):
+        # get initial state
+        fronteir = [self.current_tile_arrangement[:]]
+        explored = []
+        turns = 0
+        
+        while(len(fronteir) != 0):
+            currentState = fronteir.pop(0)
+            explored.append(currentState)
+            print(currentState)
+            turns += 1
+            if(self.GoalTest(currentState)):
+                print(turns)
+                print("this is the goal bhie")
+                return 
+            else:
+                for action in self.Actions(currentState):
+                    if(action not in explored and action not in fronteir):
+                        fronteir.append(action)
+        
     # EXER 3 Stuff
 
 win = AppWindow()
