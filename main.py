@@ -1,10 +1,8 @@
 import gi
-
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 PUZZLE_SIZE = 3
-
 
 class AppWindow(Gtk.Window):
     def __init__(self):
@@ -17,7 +15,7 @@ class AppWindow(Gtk.Window):
 
         ui_grid = Gtk.Grid(
             column_spacing=1,
-            row_spacing=3,
+            row_spacing=4,
             row_homogeneous=False,
             column_homogeneous=True,
         )
@@ -33,10 +31,28 @@ class AppWindow(Gtk.Window):
 
         lbltitle = Gtk.Label(label="3x3 Slide Puzzle")
         self.lblSolvable = Gtk.Label()
+        
+        lblSearch = Gtk.Label(label="Search algo")
+        
+        dropdownValues = Gtk.ListStore(str)
+        dropdownValues.append(["BFS"])
+        dropdownValues.append(["DFS"])
+        self.drpSearch = Gtk.ComboBox.new_with_model_and_entry(dropdownValues)
+        self.drpSearch.set_entry_text_column(0)
+        self.drpSearch.set_active(0)
+        
+        btnSearch = Gtk.Button(label="compute")
+        btnSearch.connect("clicked", self.buttonSearchAlgo)
+        
+        self.lblMoves = Gtk.Label(label="")
 
         ui_grid.attach(lbltitle, 0, 0, 1, 1)
         ui_grid.attach(self.lblSolvable, 0, 1, 1, 1)
         ui_grid.attach(puzzle_grid, 0, 2, 1, 1)
+        ui_grid.attach(lblSearch, 0, 3, 1, 1)
+        ui_grid.attach(self.drpSearch, 0, 4, 1, 1)
+        ui_grid.attach(btnSearch, 0, 5, 1, 1)
+        ui_grid.attach(self.lblMoves, 0, 6, 1, 1)
 
         self.input_list = []
         if not self.load_file():
@@ -65,7 +81,6 @@ class AppWindow(Gtk.Window):
         if self.check_solvable():
             self.lblSolvable.set_label("Solvable")
             self.clickable_buttons()
-            self.DFSearch()
         else:
             self.lblSolvable.set_label("Not Solvable")
 
@@ -102,9 +117,7 @@ class AppWindow(Gtk.Window):
                 in_list[swap] = in_list[swap - 1]
                 in_list[swap - 1] = temp
                 moves += 1
-                # print(in_list)
 
-        # print(moves)
         if iseven == (moves % 2 == 0):
             self.lblSolvable.set_label("Solvable")
             return True
@@ -147,8 +160,6 @@ class AppWindow(Gtk.Window):
         self.current_tile_arrangement[clickedindex] = 0
         self.blankindex = clickedindex
 
-        print(self.current_tile_arrangement)
-
         if self.check_puzzle():
             self.lblSolvable.set_label("You Won!")
             for b in self.button_list:
@@ -164,7 +175,18 @@ class AppWindow(Gtk.Window):
         return True
 
     # EXER 2 Stuff
-
+    
+    def buttonSearchAlgo(self, button):
+        index = self.drpSearch.get_active()
+        model = self.drpSearch.get_model()
+        algorithm = model[index][0]
+        lbloutput = ""
+        if algorithm == "BFS":
+            lbloutput = self.BFSearch()
+        else:
+            lbloutput = self.DFSearch()
+        self.lblMoves.set_label(lbloutput)
+    
     def GoalTest(self, inputList):
         final = list(range(1, PUZZLE_SIZE**2))
         final.append(0)
@@ -247,7 +269,7 @@ class AppWindow(Gtk.Window):
                 # print(outputActions)
                 with open("puzzle.out", "w") as puzzleOut:
                     puzzleOut.write(" ".join(outputActions))
-                return currentState
+                return " ".join(outputActions)
             else:
                 for action in self.Actions(currentState):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
@@ -282,7 +304,7 @@ class AppWindow(Gtk.Window):
                 # print(outputActions)
                 with open("puzzle.out", "w") as puzzleOut:
                     puzzleOut.write(" ".join(outputActions))
-                return currentState
+                return " ".join(outputActions)
             else:
                 for action in self.Actions(currentState):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
