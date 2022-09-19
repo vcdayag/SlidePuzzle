@@ -1,8 +1,10 @@
 import gi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 PUZZLE_SIZE = 3
+
 
 class AppWindow(Gtk.Window):
     def __init__(self):
@@ -30,24 +32,24 @@ class AppWindow(Gtk.Window):
         )
 
         self.lblSolvable = Gtk.Label()
-        
+
         dropdownValues = Gtk.ListStore(str)
         dropdownValues.append(["BFS"])
         dropdownValues.append(["DFS"])
         self.drpSearch = Gtk.ComboBox.new_with_model_and_entry(dropdownValues)
         self.drpSearch.set_entry_text_column(0)
         self.drpSearch.set_active(0)
-        
+
         btnSolution = Gtk.Button(label="Solution")
         btnSolution.connect("clicked", self.buttonSearchAlgo)
-        
+
         self.lblMoves = Gtk.Label(label="")
 
         ui_grid.attach(self.lblSolvable, 0, 0, 2, 1)
-        ui_grid.attach(puzzle_grid,      0, 2, 2, 1)        
-        ui_grid.attach(self.drpSearch,   0, 4, 1, 1)
-        ui_grid.attach(btnSolution,      1, 4, 1, 1)
-        ui_grid.attach(self.lblMoves,    0, 5, 2, 1)
+        ui_grid.attach(puzzle_grid, 0, 2, 2, 1)
+        ui_grid.attach(self.drpSearch, 0, 4, 1, 1)
+        ui_grid.attach(btnSolution, 1, 4, 1, 1)
+        ui_grid.attach(self.lblMoves, 0, 5, 2, 1)
 
         self.input_list = []
         if not self.load_file():
@@ -56,9 +58,11 @@ class AppWindow(Gtk.Window):
             self.input_list = list(range(PUZZLE_SIZE**2))
             random.shuffle(self.input_list)
 
+        self.final_state = list(range(1, PUZZLE_SIZE**2))
+        self.final_state.append(0)
         self.current_tile_arrangement = self.input_list[:]
         self.button_list = []
-        self.blankindex = 0
+        self.emptyIndex = 0
 
         for x in range(PUZZLE_SIZE):
             for y in range(PUZZLE_SIZE):
@@ -120,57 +124,47 @@ class AppWindow(Gtk.Window):
             self.lblSolvable.set_label("Not Solvable")
             return False
 
-    def clickable_buttons(self):
-        # enable button that is beside the blank
-        for b in self.button_list:
-            b.set_sensitive(False)
-
-        for x in range(PUZZLE_SIZE):
-            for y in range(PUZZLE_SIZE):
-                index = x * PUZZLE_SIZE + y
-                if self.button_list[index].get_label() == "":
-                    self.blankindex = index
-                    if x - 1 >= 0 and x - 1 < PUZZLE_SIZE:
-                        self.button_list[index - PUZZLE_SIZE].set_sensitive(True)
-                    if y - 1 >= 0 and y - 1 < PUZZLE_SIZE:
-                        self.button_list[index - 1].set_sensitive(True)
-                    if y + 1 >= 0 and y + 1 < PUZZLE_SIZE:
-                        self.button_list[index + 1].set_sensitive(True)
-                    if x + 1 >= 0 and x + 1 < PUZZLE_SIZE:
-                        self.button_list[index + PUZZLE_SIZE].set_sensitive(True)
-                    break
-
-    def get_button_index(self, button):
-        for i, btn in enumerate(self.button_list):
-            if button == btn:
-                return i
-
     def button_clicked(self, button):
-        clickedindex = self.get_button_index(button)
-        clickedlabel = self.button_list[clickedindex].get_label()
-        self.button_list[self.blankindex].set_label(clickedlabel)
+        clickedvalue = int(button.get_label())
+        clickedindex = self.current_tile_arrangement.index(clickedvalue)
+
+        self.current_tile_arrangement[self.emptyIndex] = clickedvalue
+        self.current_tile_arrangement[clickedindex] = 0
+
+        self.button_list[self.emptyIndex].set_label(str(clickedvalue))
         self.button_list[clickedindex].set_label("")
 
-        self.current_tile_arrangement[self.blankindex] = int(clickedlabel)
-        self.current_tile_arrangement[clickedindex] = 0
-        self.blankindex = clickedindex
+        self.emptyIndex = clickedindex
 
-        if self.check_puzzle():
+        if self.GoalTest(self.current_tile_arrangement):
             self.lblSolvable.set_label("You Won!")
             for b in self.button_list:
                 b.set_sensitive(False)
         else:
             self.clickable_buttons()
 
-    def check_puzzle(self):
-        final = [1, 2, 3, 4, 5, 6, 7, 8, ""]
-        for i in range(9):
-            if self.button_list[i].get_label() != str(final[i]):
-                return False
-        return True
+    def clickable_buttons(self):
+        # enable button that is beside the blank
+        for b in self.button_list:
+            b.set_sensitive(False)
+
+        self.emptyIndex = self.current_tile_arrangement.index(0)
+        x = self.emptyIndex % PUZZLE_SIZE
+        y = self.emptyIndex // PUZZLE_SIZE
+
+        if x - 1 >= 0 and x - 1 < PUZZLE_SIZE:
+            self.button_list[self.emptyIndex - 1].set_sensitive(True)
+        if y - 1 >= 0 and y - 1 < PUZZLE_SIZE:
+            self.button_list[self.emptyIndex - PUZZLE_SIZE].set_sensitive(True)
+        if y + 1 >= 0 and y + 1 < PUZZLE_SIZE:
+            self.button_list[self.emptyIndex + PUZZLE_SIZE].set_sensitive(True)
+        if x + 1 >= 0 and x + 1 < PUZZLE_SIZE:
+            self.button_list[self.emptyIndex + 1].set_sensitive(True)
 
     # EXER 2 Stuff
-    
+    def GoalTest(self, inputList):
+        return self.final_state == inputList
+
     def buttonSearchAlgo(self, button):
         index = self.drpSearch.get_active()
         model = self.drpSearch.get_model()
@@ -181,11 +175,6 @@ class AppWindow(Gtk.Window):
         else:
             lbloutput = self.DFSearch()
         self.lblMoves.set_label(lbloutput)
-    
-    def GoalTest(self, inputList):
-        final = list(range(1, PUZZLE_SIZE**2))
-        final.append(0)
-        return inputList == final
 
     def Actions(self, inputState):
         fronteir = []
@@ -243,7 +232,7 @@ class AppWindow(Gtk.Window):
         fronteir = [
             {
                 "puzzle": self.current_tile_arrangement[:],
-                "empty_loc": self.blankindex,
+                "empty_loc": self.emptyIndex,
                 "action": None,
                 "parent": None,
             }
@@ -278,7 +267,7 @@ class AppWindow(Gtk.Window):
         fronteir = [
             {
                 "puzzle": self.current_tile_arrangement[:],
-                "empty_loc": self.blankindex,
+                "empty_loc": self.emptyIndex,
                 "action": None,
                 "parent": None,
             }
