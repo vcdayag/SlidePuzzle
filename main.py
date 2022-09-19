@@ -152,14 +152,14 @@ class AppWindow(Gtk.Window):
         x = self.emptyIndex % PUZZLE_SIZE
         y = self.emptyIndex // PUZZLE_SIZE
 
-        if x - 1 >= 0 and x - 1 < PUZZLE_SIZE:
-            self.button_list[self.emptyIndex - 1].set_sensitive(True)
-        if y - 1 >= 0 and y - 1 < PUZZLE_SIZE:
+        if 0 <= y-1 < PUZZLE_SIZE:
             self.button_list[self.emptyIndex - PUZZLE_SIZE].set_sensitive(True)
-        if y + 1 >= 0 and y + 1 < PUZZLE_SIZE:
-            self.button_list[self.emptyIndex + PUZZLE_SIZE].set_sensitive(True)
-        if x + 1 >= 0 and x + 1 < PUZZLE_SIZE:
+        if 0 <= x+1 < PUZZLE_SIZE:
             self.button_list[self.emptyIndex + 1].set_sensitive(True)
+        if 0 <= y+1 < PUZZLE_SIZE:
+            self.button_list[self.emptyIndex + PUZZLE_SIZE].set_sensitive(True)
+        if 0 <= x-1 < PUZZLE_SIZE:
+            self.button_list[self.emptyIndex - 1].set_sensitive(True)
 
     # EXER 2 Stuff
     def GoalTest(self, inputList):
@@ -178,49 +178,50 @@ class AppWindow(Gtk.Window):
 
     def Actions(self, inputState):
         fronteir = []
-        currentBlankIndex = inputState["empty_loc"]
-        x = currentBlankIndex % PUZZLE_SIZE
-        y = currentBlankIndex // PUZZLE_SIZE
-        if y - 1 >= 0 and y - 1 < PUZZLE_SIZE:
+        currentEmptyIndex = inputState["empty_loc"]
+        x = currentEmptyIndex % PUZZLE_SIZE
+        y = currentEmptyIndex // PUZZLE_SIZE
+        
+        if 0 <= y-1 < PUZZLE_SIZE:
             temp = inputState["puzzle"][:]
-            temp[currentBlankIndex] = temp[currentBlankIndex - PUZZLE_SIZE]
-            temp[currentBlankIndex - PUZZLE_SIZE] = 0
+            temp[currentEmptyIndex] = temp[currentEmptyIndex - PUZZLE_SIZE]
+            temp[currentEmptyIndex - PUZZLE_SIZE] = 0
             state_record = {
                 "puzzle": temp[:],
-                "empty_loc": currentBlankIndex - PUZZLE_SIZE,
+                "empty_loc": currentEmptyIndex - PUZZLE_SIZE,
                 "action": "U",
                 "parent": inputState,
             }
             fronteir.append(state_record)
-        if x + 1 >= 0 and x + 1 < PUZZLE_SIZE:
+        if 0 <= x+1 < PUZZLE_SIZE:
             temp = inputState["puzzle"][:]
-            temp[currentBlankIndex] = temp[currentBlankIndex + 1]
-            temp[currentBlankIndex + 1] = 0
+            temp[currentEmptyIndex] = temp[currentEmptyIndex + 1]
+            temp[currentEmptyIndex + 1] = 0
             state_record = {
                 "puzzle": temp[:],
-                "empty_loc": currentBlankIndex + 1,
+                "empty_loc": currentEmptyIndex + 1,
                 "action": "R",
                 "parent": inputState,
             }
             fronteir.append(state_record)
-        if y + 1 >= 0 and y + 1 < PUZZLE_SIZE:
+        if 0 <= y+1 < PUZZLE_SIZE:
             temp = inputState["puzzle"][:]
-            temp[currentBlankIndex] = temp[currentBlankIndex + PUZZLE_SIZE]
-            temp[currentBlankIndex + PUZZLE_SIZE] = 0
+            temp[currentEmptyIndex] = temp[currentEmptyIndex + PUZZLE_SIZE]
+            temp[currentEmptyIndex + PUZZLE_SIZE] = 0
             state_record = {
                 "puzzle": temp[:],
-                "empty_loc": currentBlankIndex + PUZZLE_SIZE,
+                "empty_loc": currentEmptyIndex + PUZZLE_SIZE,
                 "action": "D",
                 "parent": inputState,
             }
             fronteir.append(state_record)
-        if x - 1 >= 0 and x - 1 < PUZZLE_SIZE:
+        if 0 <= x-1 < PUZZLE_SIZE:
             temp = inputState["puzzle"][:]
-            temp[currentBlankIndex] = temp[currentBlankIndex - 1]
-            temp[currentBlankIndex - 1] = 0
+            temp[currentEmptyIndex] = temp[currentEmptyIndex - 1]
+            temp[currentEmptyIndex - 1] = 0
             state_record = {
                 "puzzle": temp[:],
-                "empty_loc": currentBlankIndex - 1,
+                "empty_loc": currentEmptyIndex - 1,
                 "action": "L",
                 "parent": inputState,
             }
