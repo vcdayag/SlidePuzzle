@@ -7,14 +7,14 @@ PUZZLE_SIZE = 3
 class AppWindow(Gtk.Window):
     def __init__(self):
         super().__init__(
-            title="Puzzle",
+            title="Eight Puzzle",
             default_width=300,
             default_height=300,
             border_width=10
         )
 
         ui_grid = Gtk.Grid(
-            column_spacing=1,
+            column_spacing=2,
             row_spacing=4,
             row_homogeneous=False,
             column_homogeneous=True,
@@ -29,10 +29,7 @@ class AppWindow(Gtk.Window):
             column_homogeneous=True,
         )
 
-        lbltitle = Gtk.Label(label="3x3 Slide Puzzle")
         self.lblSolvable = Gtk.Label()
-        
-        lblSearch = Gtk.Label(label="Search algo")
         
         dropdownValues = Gtk.ListStore(str)
         dropdownValues.append(["BFS"])
@@ -41,18 +38,16 @@ class AppWindow(Gtk.Window):
         self.drpSearch.set_entry_text_column(0)
         self.drpSearch.set_active(0)
         
-        btnSearch = Gtk.Button(label="compute")
-        btnSearch.connect("clicked", self.buttonSearchAlgo)
+        btnSolution = Gtk.Button(label="Solution")
+        btnSolution.connect("clicked", self.buttonSearchAlgo)
         
         self.lblMoves = Gtk.Label(label="")
 
-        ui_grid.attach(lbltitle, 0, 0, 1, 1)
-        ui_grid.attach(self.lblSolvable, 0, 1, 1, 1)
-        ui_grid.attach(puzzle_grid, 0, 2, 1, 1)
-        ui_grid.attach(lblSearch, 0, 3, 1, 1)
-        ui_grid.attach(self.drpSearch, 0, 4, 1, 1)
-        ui_grid.attach(btnSearch, 0, 5, 1, 1)
-        ui_grid.attach(self.lblMoves, 0, 6, 1, 1)
+        ui_grid.attach(self.lblSolvable, 0, 0, 2, 1)
+        ui_grid.attach(puzzle_grid,      0, 2, 2, 1)        
+        ui_grid.attach(self.drpSearch,   0, 4, 1, 1)
+        ui_grid.attach(btnSolution,      1, 4, 1, 1)
+        ui_grid.attach(self.lblMoves,    0, 5, 2, 1)
 
         self.input_list = []
         if not self.load_file():
@@ -79,7 +74,7 @@ class AppWindow(Gtk.Window):
                 puzzle_grid.attach(self.button_list[index], y, x, 1, 1)
 
         if self.check_solvable():
-            self.lblSolvable.set_label("Solvable")
+            self.lblSolvable.set_label("Solvable. You can do this!")
             self.clickable_buttons()
         else:
             self.lblSolvable.set_label("Not Solvable")
