@@ -247,24 +247,19 @@ class AppWindow(Gtk.Window):
     def DFSearch(self):
         # initial state
         fronteir = [
-            {
-                "puzzle": self.current_tile_arrangement[:],
-                "empty_loc": self.emptyIndex,
-                "action": None,
-                "parent": None,
-            }
+            State(self.current_tile_arrangement[:],self.emptyIndex,None,None)
         ]
         explored = []
         turns = 0
         while len(fronteir) != 0:
             currentState = fronteir.pop()
-            explored.append(currentState["puzzle"])
+            explored.append(currentState.puzzle)
             turns += 1
-            if self.GoalTest(currentState["puzzle"]):
+            if self.GoalTest(currentState.puzzle):
                 outputActions = []
-                while currentState["parent"] != None:
-                    outputActions.insert(0, currentState["action"])
-                    currentState = currentState["parent"]
+                while currentState.parent != None:
+                    outputActions.insert(0, currentState.action)
+                    currentState = currentState.parent
                 # print("explored states: ",len(explored))
                 # print("path cost states: ",len(outputActions))
                 # print(outputActions)
@@ -274,9 +269,7 @@ class AppWindow(Gtk.Window):
             else:
                 for action in self.Actions(currentState):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
-                    if action["puzzle"] not in explored and action["puzzle"] not in [
-                        x["puzzle"] for x in fronteir
-                    ]:
+                    if action.puzzle not in explored and action.puzzle not in ( x.puzzle for x in fronteir ):
                         fronteir.append(action)
 
     # EXER 3 Stuff
