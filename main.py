@@ -3,7 +3,6 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
-import time
 
 # Constant for the puzzle size
 PUZZLE_SIZE = 3
@@ -32,12 +31,14 @@ class State:
             for x in range(PUZZLE_SIZE):
                 if number == 9:
                     break
+
                 pIndex = self.puzzle.index(number)
                 # convert one dimentional index into 2 dimentional index
                 pX = pIndex % PUZZLE_SIZE
                 pY = pIndex // PUZZLE_SIZE
                 self.h = self.h + abs(x - pX) + abs(y - pY)
                 number += 1
+
         self.f = self.g + self.h
         return self.h
 
@@ -108,6 +109,8 @@ class AppWindow(Gtk.Window):
         self.current_puzzle = []
         # holds buttons for the sliding puzzle
         self.button_list = []
+        # holds the solution for the puzzle
+        self.solution_list = []
         self.emptyIndex = 0
 
         # load the puzzle.in
@@ -194,12 +197,15 @@ class AppWindow(Gtk.Window):
 
         self.emptyIndex = clickedindex
 
+        if not self.isWon():
+            self.clickable_buttons()
+
+    def isWon(self):
         if self.GoalTest(self.current_puzzle):
             self.lblSolvable.set_label("You Won!")
-            for b in self.button_list:
-                b.set_sensitive(False)
-        else:
-            self.clickable_buttons()
+            for i in range(PUZZLE_SIZE**2):
+                self.button_list[i].set_sensitive(False)
+            return True
 
     def clickable_buttons(self):
         # enable button that is beside the blank
@@ -224,22 +230,63 @@ class AppWindow(Gtk.Window):
         return self.final_puzzle == inputList
 
     def clicked_solution_button(self, button):
-        start = time.time()
-        index = self.drpSearch.get_active()
-        model = self.drpSearch.get_model()
-        algorithm = model[index][0]
-        lbloutput = ""
+        if button.get_label() == "Solution":
 
-        if algorithm == "BFS":
-            lbloutput = self.BFSearch()
-        elif algorithm == "DFS":
-            lbloutput = self.DFSearch()
+            self.current_puzzle = self.input_puzzle[:]
+            for index, value in enumerate(self.current_puzzle):
+                if value == 0:
+                    self.button_list[index].set_label("")
+                    self.emptyIndex = index
+                else:
+                    self.button_list[index].set_label(str(value))
+                self.button_list[index].set_sensitive(False)
+
+            index = self.drpSearch.get_active()
+            model = self.drpSearch.get_model()
+            algorithm = model[index][0]
+            lbloutput = ""
+
+            if algorithm == "BFS":
+                lbloutput = self.BFSearch()
+            elif algorithm == "DFS":
+                lbloutput = self.DFSearch()
+            else:
+                lbloutput = self.AStarSearch()
+
+            self.solution_list = lbloutput.split()
+            self.lblMoves.set_label(lbloutput)
+            button.set_label("Next")
         else:
-            lbloutput = self.AStarSearch()
 
-        self.lblMoves.set_label(lbloutput)
-        end = time.time()
-        print(end - start)
+            currentEmptyIndex = self.emptyIndex
+            clickedButtonIndex = 0
+
+            move = self.solution_list.pop(0)
+            if len(self.solution_list) == 0:
+                button.set_sensitive(False)
+
+            if move == "U":
+                clickedButtonIndex = currentEmptyIndex - PUZZLE_SIZE
+            elif move == "R":
+                clickedButtonIndex = currentEmptyIndex + 1
+            elif move == "D":
+                clickedButtonIndex = currentEmptyIndex + PUZZLE_SIZE
+            elif move == "L":
+                clickedButtonIndex = currentEmptyIndex - 1
+
+            self.current_puzzle[currentEmptyIndex] = self.current_puzzle[
+                clickedButtonIndex
+            ]
+            self.button_list[currentEmptyIndex].set_label(
+                str(self.current_puzzle[clickedButtonIndex])
+            )
+
+            self.current_puzzle[clickedButtonIndex] = 0
+            self.button_list[clickedButtonIndex].set_label("")
+
+            self.emptyIndex = clickedButtonIndex
+
+            self.isWon()
 
     def Actions(self, inputState):
         fronteir = []
@@ -275,9 +322,7 @@ class AppWindow(Gtk.Window):
 
     def BFSearch(self):
         # initial state
-        fronteir = [
-            State(self.current_puzzle[:], self.emptyIndex, None, None)
-        ]
+        fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         explored = []
         while len(fronteir) != 0:
             currentState = fronteir.pop(0)
@@ -303,9 +348,7 @@ class AppWindow(Gtk.Window):
 
     def DFSearch(self):
         # initial state
-        fronteir = [
-            State(self.current_puzzle[:], self.emptyIndex, None, None)
-        ]
+        fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         explored = []
         while len(fronteir) != 0:
             currentState = fronteir.pop()
@@ -333,9 +376,7 @@ class AppWindow(Gtk.Window):
 
     def AStarSearch(self):
         # initial state
-        openList = [
-            State(self.current_puzzle[:], self.emptyIndex, None, None)
-        ]
+        openList = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         closedList = []
         while len(openList) != 0:
             # get the minimum f
