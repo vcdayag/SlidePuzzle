@@ -89,7 +89,7 @@ class AppWindow(Gtk.Window):
         self.drpSearch.set_active(0)
 
         btnSolution = Gtk.Button(label="Solution")
-        btnSolution.connect("clicked", self.buttonSearchAlgo)
+        btnSolution.connect("clicked", self.clicked_solution_button)
 
         self.lblMoves = Gtk.Label(label="")
 
@@ -105,7 +105,7 @@ class AppWindow(Gtk.Window):
         # holds the value from the puzzle.in file
         self.input_puzzle = []
         # holds current state of the sliding puzzle
-        self.current_tile_arrangement = []
+        self.current_puzzle = []
         # holds buttons for the sliding puzzle
         self.button_list = []
         self.emptyIndex = 0
@@ -126,7 +126,7 @@ class AppWindow(Gtk.Window):
 
                 self.button_list.append(Gtk.Button(label=txtlabel))
                 self.button_list[index].set_sensitive(False)
-                self.button_list[index].connect("clicked", self.button_clicked)
+                self.button_list[index].connect("clicked", self.clicked_puzzle_button)
                 puzzle_grid.attach(self.button_list[index], x, y, 1, 1)
 
         if self.check_solvable():
@@ -153,7 +153,7 @@ class AppWindow(Gtk.Window):
             self.input_puzzle = list(range(PUZZLE_SIZE**2))
             random.shuffle(self.input_puzzle)
 
-        self.current_tile_arrangement = self.input_puzzle[:]
+        self.current_puzzle = self.input_puzzle[:]
 
     def check_solvable(self):
         in_list = self.input_puzzle[:]
@@ -182,19 +182,19 @@ class AppWindow(Gtk.Window):
             self.lblSolvable.set_label("Not Solvable")
             return False
 
-    def button_clicked(self, button):
+    def clicked_puzzle_button(self, button):
         clickedvalue = int(button.get_label())
-        clickedindex = self.current_tile_arrangement.index(clickedvalue)
+        clickedindex = self.current_puzzle.index(clickedvalue)
 
-        self.current_tile_arrangement[self.emptyIndex] = clickedvalue
-        self.current_tile_arrangement[clickedindex] = 0
+        self.current_puzzle[self.emptyIndex] = clickedvalue
+        self.current_puzzle[clickedindex] = 0
 
         self.button_list[self.emptyIndex].set_label(str(clickedvalue))
         self.button_list[clickedindex].set_label("")
 
         self.emptyIndex = clickedindex
 
-        if self.GoalTest(self.current_tile_arrangement):
+        if self.GoalTest(self.current_puzzle):
             self.lblSolvable.set_label("You Won!")
             for b in self.button_list:
                 b.set_sensitive(False)
@@ -206,8 +206,7 @@ class AppWindow(Gtk.Window):
         for b in self.button_list:
             b.set_sensitive(False)
 
-        print(self.current_tile_arrangement)
-        self.emptyIndex = self.current_tile_arrangement.index(0)
+        self.emptyIndex = self.current_puzzle.index(0)
         x = self.emptyIndex % PUZZLE_SIZE
         y = self.emptyIndex // PUZZLE_SIZE
 
@@ -224,7 +223,7 @@ class AppWindow(Gtk.Window):
     def GoalTest(self, inputList):
         return self.final_puzzle == inputList
 
-    def buttonSearchAlgo(self, button):
+    def clicked_solution_button(self, button):
         start = time.time()
         index = self.drpSearch.get_active()
         model = self.drpSearch.get_model()
@@ -277,7 +276,7 @@ class AppWindow(Gtk.Window):
     def BFSearch(self):
         # initial state
         fronteir = [
-            State(self.current_tile_arrangement[:], self.emptyIndex, None, None)
+            State(self.current_puzzle[:], self.emptyIndex, None, None)
         ]
         explored = []
         while len(fronteir) != 0:
@@ -305,7 +304,7 @@ class AppWindow(Gtk.Window):
     def DFSearch(self):
         # initial state
         fronteir = [
-            State(self.current_tile_arrangement[:], self.emptyIndex, None, None)
+            State(self.current_puzzle[:], self.emptyIndex, None, None)
         ]
         explored = []
         while len(fronteir) != 0:
@@ -335,7 +334,7 @@ class AppWindow(Gtk.Window):
     def AStarSearch(self):
         # initial state
         openList = [
-            State(self.current_tile_arrangement[:], self.emptyIndex, None, None)
+            State(self.current_puzzle[:], self.emptyIndex, None, None)
         ]
         closedList = []
         while len(openList) != 0:
