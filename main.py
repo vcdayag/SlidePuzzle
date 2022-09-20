@@ -2,10 +2,13 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
+import time
 
 PUZZLE_SIZE = 3
 
 class State():
+    __slots__ = ('puzzle', 'empty_loc', 'action', 'parent')
+    
     def __init__(self, _puzzle, _empty_loc, _action, _parent):
         self.puzzle = _puzzle
         self.empty_loc = _empty_loc
@@ -172,8 +175,6 @@ class AppWindow(Gtk.Window):
         return self.final_state == inputList
 
     def buttonSearchAlgo(self, button):
-        import time
-        
         start = time.time()
         index = self.drpSearch.get_active()
         model = self.drpSearch.get_model()
@@ -197,45 +198,21 @@ class AppWindow(Gtk.Window):
             temp = inputState.puzzle[:]
             temp[currentEmptyIndex] = temp[currentEmptyIndex - PUZZLE_SIZE]
             temp[currentEmptyIndex - PUZZLE_SIZE] = 0
-            state_record = {
-                "puzzle": temp[:],
-                "empty_loc": currentEmptyIndex - PUZZLE_SIZE,
-                "action": "U",
-                "parent": inputState,
-            }
             fronteir.append(State(temp[:],currentEmptyIndex - PUZZLE_SIZE, "U", inputState))
         if 0 <= x+1 < PUZZLE_SIZE:
             temp = inputState.puzzle[:]
             temp[currentEmptyIndex] = temp[currentEmptyIndex + 1]
             temp[currentEmptyIndex + 1] = 0
-            state_record = {
-                "puzzle": temp[:],
-                "empty_loc": currentEmptyIndex + 1,
-                "action": "R",
-                "parent": inputState,
-            }
             fronteir.append(State(temp[:],currentEmptyIndex + 1, "R", inputState))
         if 0 <= y+1 < PUZZLE_SIZE:
             temp = inputState.puzzle[:]
             temp[currentEmptyIndex] = temp[currentEmptyIndex + PUZZLE_SIZE]
             temp[currentEmptyIndex + PUZZLE_SIZE] = 0
-            state_record = {
-                "puzzle": temp[:],
-                "empty_loc": currentEmptyIndex + PUZZLE_SIZE,
-                "action": "D",
-                "parent": inputState,
-            }
             fronteir.append(State(temp[:],currentEmptyIndex + PUZZLE_SIZE, "D", inputState))
         if 0 <= x-1 < PUZZLE_SIZE:
             temp = inputState.puzzle[:]
             temp[currentEmptyIndex] = temp[currentEmptyIndex - 1]
             temp[currentEmptyIndex - 1] = 0
-            state_record = {
-                "puzzle": temp[:],
-                "empty_loc": currentEmptyIndex - 1,
-                "action": "L",
-                "parent": inputState,
-            }
             fronteir.append(State(temp[:],currentEmptyIndex - 1, "L", inputState))
         return fronteir
 
@@ -264,9 +241,7 @@ class AppWindow(Gtk.Window):
             else:
                 for action in self.Actions(currentState):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
-                    if action.puzzle not in explored and action.puzzle not in [
-                        x.puzzle for x in fronteir
-                    ]:
+                    if action.puzzle not in explored and action.puzzle not in ( x.puzzle for x in fronteir ):
                         fronteir.append(action)
 
     def DFSearch(self):
