@@ -323,20 +323,14 @@ class AppWindow(Gtk.Window):
             State(self.current_tile_arrangement[:],self.emptyIndex,None,None)
         ]
         closedList = []
-        turns = 0
         while len(openList) != 0:
-            # removeMinF
+            # get the minimum f
             Flist = [ x.f for x in openList ]
             MinF = min(Flist)
             MinFIndex = Flist.index(MinF)
             bestNode = openList.pop(MinFIndex)
             
-            # print(Flist)
-            # print("MinF: ",MinF)
-            # print("MinFIndex: ",MinFIndex)
-            
             closedList.append(bestNode.puzzle)
-            turns += 1
             
             if self.GoalTest(bestNode.puzzle):
                 outputActions = []
@@ -350,13 +344,10 @@ class AppWindow(Gtk.Window):
                     puzzleOut.write(" ".join(outputActions))
                 return " ".join(outputActions)
             else:
-                print("BestNode: ", bestNode.puzzle)
-                print(bestNode.f,bestNode.g,bestNode.h)
+                
                 for action in self.Actions(bestNode):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
-                    print(action.puzzle)
                     if action.puzzle in closedList:
-                        print("skip this action")
                         continue
                     
                     try:
