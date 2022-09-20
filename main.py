@@ -62,6 +62,14 @@ class AppWindow(Gtk.Window):
         super().__init__(
             title="Eight Puzzle", default_width=300, default_height=300, border_width=10
         )
+        
+        self.pathCostDialog = Gtk.MessageDialog(
+                    flags=0,
+                    message_type=Gtk.MessageType.INFO,
+                    buttons=Gtk.ButtonsType.OK,
+                    text="",
+                )
+        self.pathCostDialog.format_secondary_text("")
 
         ui_grid = Gtk.Grid(
             column_spacing=2,
@@ -112,6 +120,7 @@ class AppWindow(Gtk.Window):
         # holds the solution for the puzzle
         self.solution_list = []
         self.emptyIndex = 0
+        self.pathCost = 0
 
         # load the puzzle.in
         self.load_file()
@@ -244,17 +253,27 @@ class AppWindow(Gtk.Window):
             index = self.drpSearch.get_active()
             model = self.drpSearch.get_model()
             algorithm = model[index][0]
-            lbloutput = ""
+            solutionState = ""
 
             if algorithm == "BFS":
-                lbloutput = self.BFSearch()
+                solutionState = self.BFSearch()
             elif algorithm == "DFS":
-                lbloutput = self.DFSearch()
+                solutionState = self.DFSearch()
             else:
-                lbloutput = self.AStarSearch()
+                solutionState = self.AStarSearch()
 
-            self.solution_list = lbloutput.split()
-            self.lblMoves.set_label(lbloutput)
+            self.pathCostDialog.set_markup(f"Path Cost is: {solutionState.g}")
+            outputActions = []
+            while solutionState.parent != None:
+                outputActions.insert(0, solutionState.action)
+                solutionState = solutionState.parent
+
+            movestring = " ".join(outputActions)
+            with open("puzzle.out", "w") as puzzleOut:
+                puzzleOut.write(movestring)
+
+            self.solution_list = outputActions
+            self.lblMoves.set_label(movestring)
             button.set_label("Next")
         else:
 
@@ -286,7 +305,9 @@ class AppWindow(Gtk.Window):
 
             self.emptyIndex = clickedButtonIndex
 
-            self.isWon()
+            if self.isWon():
+                self.pathCostDialog.run()
+                self.pathCostDialog.destroy()
 
     def Actions(self, inputState):
         fronteir = []
@@ -328,16 +349,8 @@ class AppWindow(Gtk.Window):
             currentState = fronteir.pop(0)
             explored.append(currentState.puzzle)
             if self.GoalTest(currentState.puzzle):
-                outputActions = []
-                while currentState.parent != None:
-                    outputActions.insert(0, currentState.action)
-                    currentState = currentState.parent
-                print("explored states: ", len(explored))
-                print("path cost states: ", len(outputActions))
-                print(outputActions)
-                with open("puzzle.out", "w") as puzzleOut:
-                    puzzleOut.write(" ".join(outputActions))
-                return " ".join(outputActions)
+                return currentState
+
             else:
                 for action in self.Actions(currentState):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
@@ -354,16 +367,8 @@ class AppWindow(Gtk.Window):
             currentState = fronteir.pop()
             explored.append(currentState.puzzle)
             if self.GoalTest(currentState.puzzle):
-                outputActions = []
-                while currentState.parent != None:
-                    outputActions.insert(0, currentState.action)
-                    currentState = currentState.parent
-                # print("explored states: ",len(explored))
-                # print("path cost states: ",len(outputActions))
-                # print(outputActions)
-                with open("puzzle.out", "w") as puzzleOut:
-                    puzzleOut.write(" ".join(outputActions))
-                return " ".join(outputActions)
+                return currentState
+
             else:
                 for action in self.Actions(currentState):
                     # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
@@ -388,16 +393,8 @@ class AppWindow(Gtk.Window):
             closedList.append(bestNode.puzzle)
 
             if self.GoalTest(bestNode.puzzle):
-                outputActions = []
-                while bestNode.parent != None:
-                    outputActions.insert(0, bestNode.action)
-                    bestNode = bestNode.parent
-                print("closedList states: ", len(closedList))
-                print("path cost states: ", len(outputActions))
-                print(outputActions)
-                with open("puzzle.out", "w") as puzzleOut:
-                    puzzleOut.write(" ".join(outputActions))
-                return " ".join(outputActions)
+                return bestNode
+
             else:
 
                 for action in self.Actions(bestNode):
