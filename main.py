@@ -363,8 +363,9 @@ class AppWindow(Gtk.Window):
                         puzzleList = [ x.puzzle for x in openList ]
                         pIndex = puzzleList.index(action.puzzle)
                         duplicateState = openList[pIndex]
-                        if pIndex >= 0 and action.g < duplicateState.g:
-                            openList[pIndex].setParent(bestNode)
+                        if pIndex >= 0:
+                            if action.g < duplicateState.g:
+                                openList[pIndex].setParent(bestNode)
                             continue
                     except ValueError as e:
                         pass
