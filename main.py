@@ -9,9 +9,7 @@ PUZZLE_SIZE = 3
 
 
 class State:
-    __slots__ = ("puzzle", "empty_loc", "action", "parent", "f", "g", "h")
-
-    def __init__(self, _puzzle, _empty_loc, _action, _parent):
+    def __init__(self, _puzzle, _empty_loc: int, _action: str, _parent):
         self.puzzle = _puzzle
         self.empty_loc = _empty_loc
         self.action = _action
@@ -120,7 +118,6 @@ class AppWindow(Gtk.Window):
         # holds the solution for the puzzle
         self.solution_list = []
         self.emptyIndex = 0
-        self.pathCost = 0
 
         # load the puzzle.in
         self.load_file()
@@ -141,11 +138,7 @@ class AppWindow(Gtk.Window):
                 self.button_list[index].connect("clicked", self.clicked_puzzle_button)
                 puzzle_grid.attach(self.button_list[index], x, y, 1, 1)
 
-        if self.check_solvable():
-            self.lblSolvable.set_label("Solvable. You can do this!")
-            self.clickable_buttons()
-        else:
-            self.lblSolvable.set_label("Not Solvable")
+        self.check_solvable()
 
     def load_file(self):
         with open("puzzle.in", "r") as file:
@@ -167,7 +160,7 @@ class AppWindow(Gtk.Window):
 
         self.current_puzzle = self.input_puzzle[:]
 
-    def check_solvable(self):
+    def check_solvable(self) -> bool:
         in_list = self.input_puzzle[:]
         emptyIndex = self.input_puzzle.index(0)
         movestooriginal = (PUZZLE_SIZE**2 - 1) - emptyIndex
@@ -189,6 +182,7 @@ class AppWindow(Gtk.Window):
 
         if isEven == (moves % 2 == 0):
             self.lblSolvable.set_label("Solvable")
+            self.clickable_buttons()
             return True
         else:
             self.lblSolvable.set_label("Not Solvable")
@@ -209,12 +203,13 @@ class AppWindow(Gtk.Window):
         if not self.isWon():
             self.clickable_buttons()
 
-    def isWon(self):
+    def isWon(self) -> bool:
         if self.GoalTest(self.current_puzzle):
             self.lblSolvable.set_label("You Won!")
             for i in range(PUZZLE_SIZE**2):
                 self.button_list[i].set_sensitive(False)
             return True
+        return False
 
     def clickable_buttons(self):
         # enable button that is beside the blank
@@ -235,7 +230,7 @@ class AppWindow(Gtk.Window):
             self.button_list[self.emptyIndex - 1].set_sensitive(True)
 
     # EXER 2 Stuff
-    def GoalTest(self, inputList):
+    def GoalTest(self, inputList) -> bool:
         return self.final_puzzle == inputList
 
     def clicked_solution_button(self, button):
@@ -309,7 +304,7 @@ class AppWindow(Gtk.Window):
                 self.pathCostDialog.run()
                 self.pathCostDialog.destroy()
 
-    def Actions(self, inputState):
+    def Actions(self, inputState: State):
         fronteir = []
         currentEmptyIndex = inputState.empty_loc
         x = currentEmptyIndex % PUZZLE_SIZE
@@ -341,7 +336,7 @@ class AppWindow(Gtk.Window):
             fronteir.append(State(temp[:], currentEmptyIndex - 1, "L", inputState))
         return fronteir
 
-    def BFSearch(self):
+    def BFSearch(self) -> State:
         # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         explored = []
@@ -359,7 +354,7 @@ class AppWindow(Gtk.Window):
                     ):
                         fronteir.append(action)
 
-    def DFSearch(self):
+    def DFSearch(self) -> State:
         # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         explored = []
@@ -379,7 +374,7 @@ class AppWindow(Gtk.Window):
 
     # EXER 3 Stuff
 
-    def AStarSearch(self):
+    def AStarSearch(self) -> State:
         # initial state
         openList = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         closedList = []
