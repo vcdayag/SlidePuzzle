@@ -7,13 +7,51 @@ import time
 PUZZLE_SIZE = 3
 
 class State():
-    __slots__ = ('puzzle', 'empty_loc', 'action', 'parent')
+    __slots__ = ('puzzle', 'empty_loc', 'action', 'parent', 'f', 'g', 'h')
     
     def __init__(self, _puzzle, _empty_loc, _action, _parent):
         self.puzzle = _puzzle
         self.empty_loc = _empty_loc
         self.action = _action
         self.parent = _parent
+        self.g = 0
+        if not (self.parent is None):
+            self.g = self.parent.g + 1
+            # print(self.parent.g)
+        self.h = 0
+        self.f = 0
+        self.computeH()
+    
+    def computeH(self) -> int:
+        number = 1
+        for y in range(PUZZLE_SIZE):
+            for x in range(PUZZLE_SIZE):
+                if number == 9:
+                    break
+                pIndex = self.puzzle.index(number)
+                pX = pIndex % PUZZLE_SIZE
+                pY = pIndex // PUZZLE_SIZE
+                self.h = self.h + abs(x - pX) + abs(y - pY)
+                # print("computer h: ",self.h)
+                number += 1
+        self.f = self.g + self.h
+        return self.h
+    
+    def setParent(self,parent):
+        self.parent = parent
+        self.g = parent.g + 1
+        self.h = self.computeH()
+        # self.f = self.g + self.h
+    
+    def values(self):
+        print("puzzle: ",self.puzzle)
+        print("action: ",self.action)
+        print("parent: ",self.parent)
+        print("f: ",self.f)
+        print("g: ",self.g)
+        print("h: ",self.h)
+        print("====")
+        
 
 class AppWindow(Gtk.Window):
     def __init__(self):
@@ -45,6 +83,7 @@ class AppWindow(Gtk.Window):
         dropdownValues = Gtk.ListStore(str)
         dropdownValues.append(["BFS"])
         dropdownValues.append(["DFS"])
+        dropdownValues.append(["A*Search"])
         self.drpSearch = Gtk.ComboBox.new_with_model_and_entry(dropdownValues)
         self.drpSearch.set_entry_text_column(0)
         self.drpSearch.set_active(0)
@@ -180,10 +219,14 @@ class AppWindow(Gtk.Window):
         model = self.drpSearch.get_model()
         algorithm = model[index][0]
         lbloutput = ""
+        
         if algorithm == "BFS":
             lbloutput = self.BFSearch()
-        else:
+        elif algorithm == "DFS":
             lbloutput = self.DFSearch()
+        else:
+            lbloutput = self.Astar()
+            
         self.lblMoves.set_label(lbloutput)
         end = time.time()
         print(end - start)
@@ -232,9 +275,9 @@ class AppWindow(Gtk.Window):
                 while currentState.parent != None:
                     outputActions.insert(0, currentState.action)
                     currentState = currentState.parent
-                # print("explored states: ",len(explored))
-                # print("path cost states: ",len(outputActions))
-                # print(outputActions)
+                print("explored states: ",len(explored))
+                print("path cost states: ",len(outputActions))
+                print(outputActions)
                 with open("puzzle.out", "w") as puzzleOut:
                     puzzleOut.write(" ".join(outputActions))
                 return " ".join(outputActions)
@@ -273,7 +316,60 @@ class AppWindow(Gtk.Window):
                         fronteir.append(action)
 
     # EXER 3 Stuff
-
+    
+    def Astar(self):
+        # initial state
+        openList = [
+            State(self.current_tile_arrangement[:],self.emptyIndex,None,None)
+        ]
+        closedList = []
+        turns = 0
+        while len(openList) != 0:
+            # removeMinF
+            Flist = [ x.f for x in openList ]
+            MinF = min(Flist)
+            MinFIndex = Flist.index(MinF)
+            bestNode = openList.pop(MinFIndex)
+            
+            # print(Flist)
+            # print("MinF: ",MinF)
+            # print("MinFIndex: ",MinFIndex)
+            
+            closedList.append(bestNode.puzzle)
+            turns += 1
+            
+            if self.GoalTest(bestNode.puzzle):
+                outputActions = []
+                while bestNode.parent != None:
+                    outputActions.insert(0, bestNode.action)
+                    bestNode = bestNode.parent
+                print("closedList states: ",len(closedList))
+                print("path cost states: ",len(outputActions))
+                print(outputActions)
+                with open("puzzle.out", "w") as puzzleOut:
+                    puzzleOut.write(" ".join(outputActions))
+                return " ".join(outputActions)
+            else:
+                print("BestNode: ", bestNode.puzzle)
+                print(bestNode.f,bestNode.g,bestNode.h)
+                for action in self.Actions(bestNode):
+                    # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
+                    print(action.puzzle)
+                    if action.puzzle in closedList:
+                        print("skip this action")
+                        continue
+                    
+                    try:
+                        puzzleList = [ x.puzzle for x in openList ]
+                        pIndex = puzzleList.index(action.puzzle)
+                        duplicateState = openList[pIndex]
+                        if pIndex >= 0 and action.g < duplicateState.g:
+                            openList[pIndex].setParent(bestNode)
+                            continue
+                    except ValueError as e:
+                        pass
+                        
+                    openList.append(action)
 
 win = AppWindow()
 win.connect("destroy", Gtk.main_quit)
