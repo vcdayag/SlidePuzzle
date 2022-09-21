@@ -62,7 +62,6 @@ class AppWindow(Gtk.Window):
         )
         
         self.pathCostDialog = Gtk.MessageDialog(
-                    flags=0,
                     message_type=Gtk.MessageType.INFO,
                     buttons=Gtk.ButtonsType.OK,
                     text="",
@@ -95,15 +94,15 @@ class AppWindow(Gtk.Window):
         self.drpSearch.set_entry_text_column(0)
         self.drpSearch.set_active(0)
 
-        btnSolution = Gtk.Button(label="Solution")
-        btnSolution.connect("clicked", self.clicked_solution_button)
+        self.btnSolution = Gtk.Button(label="Solution")
+        self.btnSolution.connect("clicked", self.clicked_solution_button)
 
         self.lblMoves = Gtk.Label(label="")
 
         ui_grid.attach(self.lblSolvable, 0, 0, 2, 1)
         ui_grid.attach(puzzle_grid, 0, 2, 2, 1)
         ui_grid.attach(self.drpSearch, 0, 4, 1, 1)
-        ui_grid.attach(btnSolution, 1, 4, 1, 1)
+        ui_grid.attach(self.btnSolution, 1, 4, 1, 1)
         ui_grid.attach(self.lblMoves, 0, 5, 2, 1)
 
         # holds the goal/final state of the sliding puzzle
@@ -115,7 +114,7 @@ class AppWindow(Gtk.Window):
         self.current_puzzle = []
         # holds buttons for the sliding puzzle
         self.button_list = []
-        # holds the solution for the puzzle
+        # holds the solution actions for the puzzle
         self.solution_list = []
         self.emptyIndex = 0
 
@@ -146,6 +145,7 @@ class AppWindow(Gtk.Window):
             for x in lines:
                 row = x.split()
                 if len(row) != PUZZLE_SIZE:
+                    print("Invalid puzzle.in")
                     return False
 
                 self.input_puzzle += row
@@ -160,10 +160,14 @@ class AppWindow(Gtk.Window):
 
         self.current_puzzle = self.input_puzzle[:]
 
+    # https://youtu.be/YI1WqYKHi78?t=1125
     def check_solvable(self) -> bool:
         in_list = self.input_puzzle[:]
         emptyIndex = self.input_puzzle.index(0)
-        movestooriginal = (PUZZLE_SIZE**2 - 1) - emptyIndex
+        y = (emptyIndex // PUZZLE_SIZE) + 1
+        x = (emptyIndex % PUZZLE_SIZE) + 1
+        
+        movestooriginal = (PUZZLE_SIZE - y) + (PUZZLE_SIZE - x)  
 
         isEven = True if movestooriginal % 2 == 0 else False
         moves = 0
@@ -186,6 +190,8 @@ class AppWindow(Gtk.Window):
             return True
         else:
             self.lblSolvable.set_label("Not Solvable")
+            self.btnSolution.set_sensitive(False)
+            self.drpSearch.set_sensitive(False)
             return False
 
     def clicked_puzzle_button(self, button):
@@ -230,8 +236,8 @@ class AppWindow(Gtk.Window):
             self.button_list[self.emptyIndex - 1].set_sensitive(True)
 
     # EXER 2 Stuff
-    def GoalTest(self, inputList) -> bool:
-        return self.final_puzzle == inputList
+    def GoalTest(self, input_puzzle) -> bool:
+        return self.final_puzzle == input_puzzle
 
     def clicked_solution_button(self, button):
         if button.get_label() == "Solution":
@@ -270,6 +276,7 @@ class AppWindow(Gtk.Window):
             self.solution_list = outputActions
             self.lblMoves.set_label(movestring)
             button.set_label("Next")
+            
         else:
 
             currentEmptyIndex = self.emptyIndex
