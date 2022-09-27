@@ -362,30 +362,31 @@ class AppWindow(Gtk.Window):
 
             else:
                 for action in self.Actions(currentState):
-                    # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
                     if tuple(action.puzzle) not in explored and action.puzzle not in puzzleFronteir:
                         fronteir.append(action)
                         puzzleFronteir.append(action.puzzle)
 
     def DFSearch(self) -> State:
         # initial state
+        start = time.time()
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
-        explored = []
+        puzzleFronteir = [self.current_puzzle[:]]
+        explored = set()
         while len(fronteir) != 0:
             currentState = fronteir.pop()
-            explored.append(currentState.puzzle)
+            puzzleFronteir.pop()
+            explored.add(tuple(currentState.puzzle))
             print("explored: ",len(explored))
             if self.GoalTest(currentState.puzzle):
                 print("explored: ",len(explored))
+                print("time consumed: ",time.time()-start)
                 return currentState
 
             else:
                 for action in self.Actions(currentState):
-                    # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
-                    if action.puzzle not in explored and action.puzzle not in (
-                        x.puzzle for x in fronteir
-                    ):
+                    if tuple(action.puzzle) not in explored and action.puzzle not in puzzleFronteir:
                         fronteir.append(action)
+                        puzzleFronteir.append(action.puzzle)
 
     # EXER 3 Stuff
 
@@ -408,7 +409,6 @@ class AppWindow(Gtk.Window):
             else:
 
                 for action in self.Actions(bestNode):
-                    # same logic with test case but slow? because creates a list of the puzzle list from the list of dictionaries
                     if action.puzzle in closedList:
                         continue
 
