@@ -323,7 +323,7 @@ class AppWindow(Gtk.Window):
                 self.pathCostDialog.run()
                 self.pathCostDialog.destroy()
 
-    def PossibleMoves(self, inputState: State):
+    def ActionsResults(self, inputState: State):
         fronteir = []
         currentEmptyIndex = inputState.empty_loc
         x = currentEmptyIndex % PUZZLE_SIZE
@@ -377,7 +377,7 @@ class AppWindow(Gtk.Window):
                 return currentState
 
             else:
-                for newState in self.PossibleMoves(currentState):
+                for newState in self.ActionsResults(currentState):
                     if tuple(newState.puzzle) not in exploredFronteirPuzzle:
                         fronteir.append(newState)
                         exploredFronteirPuzzle.add(tuple(newState.puzzle))
@@ -404,7 +404,7 @@ class AppWindow(Gtk.Window):
                 return currentState
 
             else:
-                for newState in self.PossibleMoves(currentState):
+                for newState in self.ActionsResults(currentState):
                     if tuple(newState.puzzle) not in exploredFronteirPuzzle:
                         fronteir.append(newState)
                         exploredFronteirPuzzle.add(tuple(newState.puzzle))
@@ -435,7 +435,7 @@ class AppWindow(Gtk.Window):
 
             else:
 
-                for newState in self.PossibleMoves(bestNode):
+                for newState in self.ActionsResults(bestNode):
                     if tuple(newState.puzzle) in closedList:
                         continue
 
