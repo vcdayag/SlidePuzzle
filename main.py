@@ -8,7 +8,7 @@ import time
 # Constant for the puzzle size
 PUZZLE_SIZE = 3
 
-
+# 
 class State:
     def __init__(self, _puzzle, _empty_loc: int, _action: str, _parent):
         self.puzzle = _puzzle
@@ -55,7 +55,7 @@ class State:
         print("h: ", self.h)
         print("====")
 
-
+# class for the gui
 class AppWindow(Gtk.Window):
     def __init__(self):
         super().__init__(
@@ -124,6 +124,9 @@ class AppWindow(Gtk.Window):
         ui_grid.attach(self.btnSolution, 1, 4, 1, 1)
         ui_grid.attach(self.lblMoves, 0, 5, 2, 1)
 
+        # this block of code setups the initial puzzle and also creates
+        # the buttons that are needed for the puzzle.
+        
         # y coordinate
         for y in range(PUZZLE_SIZE):
             # x coordinate
@@ -141,7 +144,8 @@ class AppWindow(Gtk.Window):
                 puzzle_grid.attach(self.button_list[index], x, y, 1, 1)
 
         self.check_solvable()
-
+    
+    # function that loads and checks the file puzzle.in
     def load_file(self):
         with open("puzzle.in", "r") as file:
             lines = file.readlines()
@@ -171,7 +175,7 @@ class AppWindow(Gtk.Window):
         self.current_puzzle = self.input_puzzle[:]
         return True
 
-    # https://youtu.be/YI1WqYKHi78?t=1125
+    # logic was based on this video https://youtu.be/YI1WqYKHi78?t=1125
     def check_solvable(self) -> bool:
         in_list = self.input_puzzle[:]
         emptyIndex = self.input_puzzle.index(0)
@@ -205,6 +209,7 @@ class AppWindow(Gtk.Window):
             self.drpSearch.set_sensitive(False)
             return False
 
+    # function for the sliding puzzle pieces buttons
     def clicked_puzzle_button(self, button):
         clickedvalue = int(button.get_label())
         clickedindex = self.current_puzzle.index(clickedvalue)
@@ -220,6 +225,7 @@ class AppWindow(Gtk.Window):
         if not self.isWon():
             self.clickable_buttons()
 
+    # game checker if you already won. mostly for the user interface
     def isWon(self) -> bool:
         if self.GoalTest(self.current_puzzle):
             self.lblSolvable.set_label("You Won!")
@@ -228,6 +234,7 @@ class AppWindow(Gtk.Window):
             return True
         return False
 
+    # function to check and set the buttons that are allowed to be clicked
     def clickable_buttons(self):
         # enable button that is beside the blank
         for b in self.button_list:
@@ -246,10 +253,11 @@ class AppWindow(Gtk.Window):
         if 0 <= x - 1 < PUZZLE_SIZE:
             self.button_list[self.emptyIndex - 1].set_sensitive(True)
 
-    # EXER 2 Stuff
+    # checks if the input_puzzle is the same with the final_puzzle/winning condition
     def GoalTest(self, input_puzzle) -> bool:
         return self.final_puzzle == input_puzzle
 
+    # helper function for the solution button
     def clicked_solution_button(self, button):
         if button.get_label() == "Solution":
 
@@ -322,7 +330,9 @@ class AppWindow(Gtk.Window):
             if self.isWon():
                 self.pathCostDialog.run()
                 self.pathCostDialog.destroy()
-
+    
+    # function the gets the possible moves can be done on the inputState
+    # and returns a list of States
     def ActionsResults(self, inputState: State):
         fronteir = []
         currentEmptyIndex = inputState.empty_loc
@@ -360,7 +370,7 @@ class AppWindow(Gtk.Window):
         # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
 
-        # explored is not necessary its is just to check if it is the same with the test cases.
+        # explored is not necessary it is just to check if it is the same with the test cases.
         explored = set()
         exploredFronteirPuzzle = set()
 
