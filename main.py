@@ -271,6 +271,7 @@ class AppWindow(Gtk.Window):
                 solutionState = solutionState.parent
 
             movestring = " ".join(outputActions)
+            print("path cost: ",len(outputActions))
             with open("puzzle.out", "w") as puzzleOut:
                 puzzleOut.write(movestring)
 
@@ -392,24 +393,27 @@ class AppWindow(Gtk.Window):
 
     def AStarSearch(self) -> State:
         # initial state
+        start = time.time()
         openList = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
-        closedList = []
+        closedList = set()
         while len(openList) != 0:
             # get the minimum f
             Flist = [x.f for x in openList]
             MinF = min(Flist)
             MinFIndex = Flist.index(MinF)
             bestNode = openList.pop(MinFIndex)
+            closedList.add(tuple(bestNode.puzzle))
 
-            closedList.append(bestNode.puzzle)
-
+            print("explored: ",len(closedList))
             if self.GoalTest(bestNode.puzzle):
+                print("explored: ",len(closedList))
+                print("time consumed: ",time.time()-start)
                 return bestNode
 
             else:
 
                 for action in self.Actions(bestNode):
-                    if action.puzzle in closedList:
+                    if tuple(action.puzzle) in closedList:
                         continue
 
                     try:
