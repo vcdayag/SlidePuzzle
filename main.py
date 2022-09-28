@@ -6,7 +6,7 @@ from gi.repository import Gtk
 import time
 
 # Constant for the puzzle size
-PUZZLE_SIZE = 3
+PUZZLE_SIZE = 4
 
 
 class State:
@@ -62,6 +62,25 @@ class AppWindow(Gtk.Window):
             title="Eight Puzzle", default_width=300, default_height=300, border_width=10
         )
         
+        # holds the goal/final state of the sliding puzzle
+        self.final_puzzle = list(range(1, PUZZLE_SIZE**2))
+        self.final_puzzle.append(0)
+        # holds the value from the puzzle.in file
+        self.input_puzzle = []
+        # holds current state of the sliding puzzle
+        self.current_puzzle = []
+        # holds buttons for the sliding puzzle
+        self.button_list = []
+        # holds the solution actions for the puzzle
+        self.solution_list = []
+        self.emptyIndex = 0
+
+        # load the puzzle.in
+        if not self.load_file():
+            
+            print("Invalid puzzle.in")
+            return
+        
         self.pathCostDialog = Gtk.MessageDialog(
                     message_type=Gtk.MessageType.INFO,
                     buttons=Gtk.ButtonsType.OK,
@@ -106,21 +125,7 @@ class AppWindow(Gtk.Window):
         ui_grid.attach(self.btnSolution, 1, 4, 1, 1)
         ui_grid.attach(self.lblMoves, 0, 5, 2, 1)
 
-        # holds the goal/final state of the sliding puzzle
-        self.final_puzzle = list(range(1, PUZZLE_SIZE**2))
-        self.final_puzzle.append(0)
-        # holds the value from the puzzle.in file
-        self.input_puzzle = []
-        # holds current state of the sliding puzzle
-        self.current_puzzle = []
-        # holds buttons for the sliding puzzle
-        self.button_list = []
-        # holds the solution actions for the puzzle
-        self.solution_list = []
-        self.emptyIndex = 0
-
-        # load the puzzle.in
-        self.load_file()
+        
 
         # y coordinate
         for y in range(PUZZLE_SIZE):
@@ -143,23 +148,30 @@ class AppWindow(Gtk.Window):
     def load_file(self):
         with open("puzzle.in", "r") as file:
             lines = file.readlines()
+            if len(lines) != PUZZLE_SIZE:
+                print("Incomplete rows")
+                return False
             for x in lines:
                 row = x.split()
                 if len(row) != PUZZLE_SIZE:
-                    print("Invalid puzzle.in")
+                    print("Incomplete columns")
                     return False
 
                 self.input_puzzle += row
 
         self.input_puzzle = [int(x) for x in self.input_puzzle]
+        for x in range(PUZZLE_SIZE**2):
+            if(x not in self.input_puzzle):
+                print("Missing value")
+                return False
 
         if len(self.input_puzzle) != PUZZLE_SIZE**2:
             import random
-
             self.input_puzzle = list(range(PUZZLE_SIZE**2))
             random.shuffle(self.input_puzzle)
 
         self.current_puzzle = self.input_puzzle[:]
+        return True
 
     # https://youtu.be/YI1WqYKHi78?t=1125
     def check_solvable(self) -> bool:
@@ -168,9 +180,9 @@ class AppWindow(Gtk.Window):
         y = (emptyIndex // PUZZLE_SIZE) + 1
         x = (emptyIndex % PUZZLE_SIZE) + 1
         
-        movestooriginal = (PUZZLE_SIZE - y) + (PUZZLE_SIZE - x)  
+        movesToOriginalPosition = (PUZZLE_SIZE - y) + (PUZZLE_SIZE - x)  
 
-        isEven = True if movestooriginal % 2 == 0 else False
+        isEven = True if movesToOriginalPosition % 2 == 0 else False
         moves = 0
 
         finalState = self.final_puzzle
@@ -178,11 +190,11 @@ class AppWindow(Gtk.Window):
             integerIndex = in_list.index(integer)
             if finalState.index(integer) == integerIndex:
                 continue
-
-            for swap in range(integerIndex, integer - 1, -1):
-                temp = in_list[swap]
-                in_list[swap] = in_list[swap - 1]
-                in_list[swap - 1] = temp
+            
+            for swapIndex in range(integerIndex, integer - 1, -1):
+                temp = in_list[swapIndex]
+                in_list[swapIndex] = in_list[swapIndex - 1]
+                in_list[swapIndex - 1] = temp
                 moves += 1
 
         if isEven == (moves % 2 == 0):
