@@ -323,7 +323,7 @@ class AppWindow(Gtk.Window):
                 self.pathCostDialog.run()
                 self.pathCostDialog.destroy()
 
-    def Actions(self, inputState: State):
+    def PossibleMoves(self, inputState: State):
         fronteir = []
         currentEmptyIndex = inputState.empty_loc
         x = currentEmptyIndex % PUZZLE_SIZE
@@ -377,10 +377,10 @@ class AppWindow(Gtk.Window):
                 return currentState
 
             else:
-                for action in self.Actions(currentState):
-                    if tuple(action.puzzle) not in exploredFronteirPuzzle:
-                        fronteir.append(action)
-                        exploredFronteirPuzzle.add(tuple(action.puzzle))
+                for newState in self.PossibleMoves(currentState):
+                    if tuple(newState.puzzle) not in exploredFronteirPuzzle:
+                        fronteir.append(newState)
+                        exploredFronteirPuzzle.add(tuple(newState.puzzle))
 
     def DFSearch(self) -> State:
         start = time.time()
@@ -404,10 +404,10 @@ class AppWindow(Gtk.Window):
                 return currentState
 
             else:
-                for action in self.Actions(currentState):
-                    if tuple(action.puzzle) not in exploredFronteirPuzzle:
-                        fronteir.append(action)
-                        exploredFronteirPuzzle.add(tuple(action.puzzle))
+                for newState in self.PossibleMoves(currentState):
+                    if tuple(newState.puzzle) not in exploredFronteirPuzzle:
+                        fronteir.append(newState)
+                        exploredFronteirPuzzle.add(tuple(newState.puzzle))
 
     # EXER 3 Stuff
 
@@ -435,15 +435,15 @@ class AppWindow(Gtk.Window):
 
             else:
 
-                for action in self.Actions(bestNode):
-                    if tuple(action.puzzle) in closedList:
+                for newState in self.PossibleMoves(bestNode):
+                    if tuple(newState.puzzle) in closedList:
                         continue
 
                     try:
-                        pIndex = openListPuzzle.index(action.puzzle)
+                        pIndex = openListPuzzle.index(newState.puzzle)
                         duplicateState = openList[pIndex]
                         if pIndex >= 0:
-                            if action.g < duplicateState.g:
+                            if newState.g < duplicateState.g:
                                 openList[pIndex].setParent(bestNode)
                             continue
                     except ValueError as e:
@@ -451,8 +451,8 @@ class AppWindow(Gtk.Window):
                         # action.puzzle is not in the openListPuzzle list
                         pass
 
-                    openList.append(action)
-                    openListPuzzle.append(action.puzzle)
+                    openList.append(newState)
+                    openListPuzzle.append(newState.puzzle)
 
 
 win = AppWindow()
