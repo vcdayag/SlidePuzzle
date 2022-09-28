@@ -6,7 +6,7 @@ from gi.repository import Gtk
 import time
 
 # Constant for the puzzle size
-PUZZLE_SIZE = 4
+PUZZLE_SIZE = 3
 
 
 class State:
@@ -61,7 +61,7 @@ class AppWindow(Gtk.Window):
         super().__init__(
             title="Eight Puzzle", default_width=300, default_height=300, border_width=10
         )
-        
+
         # holds the goal/final state of the sliding puzzle
         self.final_puzzle = list(range(1, PUZZLE_SIZE**2))
         self.final_puzzle.append(0)
@@ -77,15 +77,14 @@ class AppWindow(Gtk.Window):
 
         # load the puzzle.in
         if not self.load_file():
-            
             print("Invalid puzzle.in")
             return
-        
+
         self.pathCostDialog = Gtk.MessageDialog(
-                    message_type=Gtk.MessageType.INFO,
-                    buttons=Gtk.ButtonsType.OK,
-                    text="",
-                )
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text="",
+        )
         self.pathCostDialog.format_secondary_text("")
 
         ui_grid = Gtk.Grid(
@@ -125,8 +124,6 @@ class AppWindow(Gtk.Window):
         ui_grid.attach(self.btnSolution, 1, 4, 1, 1)
         ui_grid.attach(self.lblMoves, 0, 5, 2, 1)
 
-        
-
         # y coordinate
         for y in range(PUZZLE_SIZE):
             # x coordinate
@@ -149,24 +146,25 @@ class AppWindow(Gtk.Window):
         with open("puzzle.in", "r") as file:
             lines = file.readlines()
             if len(lines) != PUZZLE_SIZE:
-                print("Incomplete rows")
+                print("Invalid rows")
                 return False
             for x in lines:
                 row = x.split()
                 if len(row) != PUZZLE_SIZE:
-                    print("Incomplete columns")
+                    print("Invalid columns")
                     return False
 
                 self.input_puzzle += row
 
         self.input_puzzle = [int(x) for x in self.input_puzzle]
         for x in range(PUZZLE_SIZE**2):
-            if(x not in self.input_puzzle):
+            if x not in self.input_puzzle:
                 print("Missing value")
                 return False
 
         if len(self.input_puzzle) != PUZZLE_SIZE**2:
             import random
+
             self.input_puzzle = list(range(PUZZLE_SIZE**2))
             random.shuffle(self.input_puzzle)
 
@@ -179,8 +177,8 @@ class AppWindow(Gtk.Window):
         emptyIndex = self.input_puzzle.index(0)
         y = (emptyIndex // PUZZLE_SIZE) + 1
         x = (emptyIndex % PUZZLE_SIZE) + 1
-        
-        movesToOriginalPosition = (PUZZLE_SIZE - y) + (PUZZLE_SIZE - x)  
+
+        movesToOriginalPosition = (PUZZLE_SIZE - y) + (PUZZLE_SIZE - x)
 
         isEven = True if movesToOriginalPosition % 2 == 0 else False
         moves = 0
@@ -190,7 +188,7 @@ class AppWindow(Gtk.Window):
             integerIndex = in_list.index(integer)
             if finalState.index(integer) == integerIndex:
                 continue
-            
+
             for swapIndex in range(integerIndex, integer - 1, -1):
                 temp = in_list[swapIndex]
                 in_list[swapIndex] = in_list[swapIndex - 1]
@@ -283,14 +281,14 @@ class AppWindow(Gtk.Window):
                 solutionState = solutionState.parent
 
             movestring = " ".join(outputActions)
-            print("path cost: ",len(outputActions))
+            print("path cost: ", len(outputActions))
             with open("puzzle.out", "w") as puzzleOut:
                 puzzleOut.write(movestring)
 
             self.solution_list = outputActions
             self.lblMoves.set_label(movestring)
             button.set_label("Next")
-            
+
         else:
 
             currentEmptyIndex = self.emptyIndex
@@ -361,21 +359,21 @@ class AppWindow(Gtk.Window):
         start = time.time()
         # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
-        
+
         # explored is not necessary its is just to check if it is the same with the test cases.
         explored = set()
         exploredFronteirPuzzle = set()
-        
+
         while len(fronteir) != 0:
             currentState = fronteir.pop(0)
             explored.add(tuple(currentState.puzzle))
             exploredFronteirPuzzle.add(tuple(currentState.puzzle))
-            print("explored: ",len(explored))
+            print("explored: ", len(explored))
             if self.GoalTest(currentState.puzzle):
-                print("\nexplored: ",len(explored))
-                print("explored+puzzleFronteir: ",len(explored)+len(fronteir))
-                print("exploredAndFronteir: ",len(exploredFronteirPuzzle))
-                print("time consumed: ",time.time()-start)
+                print("\nexplored: ", len(explored))
+                print("explored+puzzleFronteir: ", len(explored) + len(fronteir))
+                print("exploredAndFronteir: ", len(exploredFronteirPuzzle))
+                print("time consumed: ", time.time() - start)
                 return currentState
 
             else:
@@ -388,21 +386,21 @@ class AppWindow(Gtk.Window):
         start = time.time()
         # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
-        
+
         # explored is not necessary its is just to check if it is the same with the test cases.
         explored = set()
         exploredFronteirPuzzle = set()
-        
+
         while len(fronteir) != 0:
             currentState = fronteir.pop()
             explored.add(tuple(currentState.puzzle))
             exploredFronteirPuzzle.add(tuple(currentState.puzzle))
-            print("explored: ",len(explored))
+            print("explored: ", len(explored))
             if self.GoalTest(currentState.puzzle):
-                print("\nexplored: ",len(explored))
-                print("explored+puzzleFronteir: ",len(explored)+len(fronteir))
-                print("exploredAndFronteir: ",len(exploredFronteirPuzzle))
-                print("time consumed: ",time.time()-start)
+                print("\nexplored: ", len(explored))
+                print("explored+puzzleFronteir: ", len(explored) + len(fronteir))
+                print("exploredAndFronteir: ", len(exploredFronteirPuzzle))
+                print("time consumed: ", time.time() - start)
                 return currentState
 
             else:
@@ -419,7 +417,7 @@ class AppWindow(Gtk.Window):
         openList = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         openListPuzzle = [self.current_puzzle[:]]
         closedList = set()
-        
+
         while len(openList) != 0:
             # get the minimum f
             Flist = [x.f for x in openList]
@@ -429,10 +427,10 @@ class AppWindow(Gtk.Window):
             openListPuzzle.pop(MinFIndex)
             closedList.add(tuple(bestNode.puzzle))
 
-            print("explored: ",len(closedList))
+            print("explored: ", len(closedList))
             if self.GoalTest(bestNode.puzzle):
-                print("explored: ",len(closedList))
-                print("time consumed: ",time.time()-start)
+                print("explored: ", len(closedList))
+                print("time consumed: ", time.time() - start)
                 return bestNode
 
             else:
