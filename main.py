@@ -395,6 +395,7 @@ class AppWindow(Gtk.Window):
         # initial state
         start = time.time()
         openList = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
+        openListPuzzle = [self.current_puzzle[:]]
         closedList = set()
         while len(openList) != 0:
             # get the minimum f
@@ -402,6 +403,7 @@ class AppWindow(Gtk.Window):
             MinF = min(Flist)
             MinFIndex = Flist.index(MinF)
             bestNode = openList.pop(MinFIndex)
+            openListPuzzle.pop(MinFIndex)
             closedList.add(tuple(bestNode.puzzle))
 
             print("explored: ",len(closedList))
@@ -417,17 +419,20 @@ class AppWindow(Gtk.Window):
                         continue
 
                     try:
-                        puzzleList = [x.puzzle for x in openList]
-                        pIndex = puzzleList.index(action.puzzle)
+                        # puzzleList = [x.puzzle for x in openList]
+                        pIndex = openListPuzzle.index(action.puzzle)
                         duplicateState = openList[pIndex]
                         if pIndex >= 0:
                             if action.g < duplicateState.g:
                                 openList[pIndex].setParent(bestNode)
                             continue
                     except ValueError as e:
+                        # if there is a value error raised meaning
+                        # action.puzzle is not in the openListPuzzle list
                         pass
 
                     openList.append(action)
+                    openListPuzzle.append(action.puzzle)
 
 
 win = AppWindow()
