@@ -346,57 +346,68 @@ class AppWindow(Gtk.Window):
         return fronteir
 
     def BFSearch(self) -> State:
-        # initial state
         start = time.time()
+        # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
-        puzzleFronteir = [self.current_puzzle[:]]
+        
+        # explored is not necessary its is just to check if it is the same with the test cases.
         explored = set()
+        exploredFronteirPuzzle = set()
+        
         while len(fronteir) != 0:
             currentState = fronteir.pop(0)
-            puzzleFronteir.pop(0)
             explored.add(tuple(currentState.puzzle))
+            exploredFronteirPuzzle.add(tuple(currentState.puzzle))
             print("explored: ",len(explored))
             if self.GoalTest(currentState.puzzle):
-                print("explored: ",len(explored))
+                print("\nexplored: ",len(explored))
+                print("explored+puzzleFronteir: ",len(explored)+len(fronteir))
+                print("exploredAndFronteir: ",len(exploredFronteirPuzzle))
                 print("time consumed: ",time.time()-start)
                 return currentState
 
             else:
                 for action in self.Actions(currentState):
-                    if tuple(action.puzzle) not in explored and action.puzzle not in puzzleFronteir:
+                    if tuple(action.puzzle) not in exploredFronteirPuzzle:
                         fronteir.append(action)
-                        puzzleFronteir.append(action.puzzle)
+                        exploredFronteirPuzzle.add(tuple(action.puzzle))
 
     def DFSearch(self) -> State:
-        # initial state
         start = time.time()
+        # initial state
         fronteir = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
-        puzzleFronteir = [self.current_puzzle[:]]
+        
+        # explored is not necessary its is just to check if it is the same with the test cases.
         explored = set()
+        exploredFronteirPuzzle = set()
+        
         while len(fronteir) != 0:
             currentState = fronteir.pop()
-            puzzleFronteir.pop()
             explored.add(tuple(currentState.puzzle))
+            exploredFronteirPuzzle.add(tuple(currentState.puzzle))
             print("explored: ",len(explored))
             if self.GoalTest(currentState.puzzle):
-                print("explored: ",len(explored))
+                print("\nexplored: ",len(explored))
+                print("explored+puzzleFronteir: ",len(explored)+len(fronteir))
+                print("exploredAndFronteir: ",len(exploredFronteirPuzzle))
                 print("time consumed: ",time.time()-start)
                 return currentState
 
             else:
                 for action in self.Actions(currentState):
-                    if tuple(action.puzzle) not in explored and action.puzzle not in puzzleFronteir:
+                    if tuple(action.puzzle) not in exploredFronteirPuzzle:
                         fronteir.append(action)
-                        puzzleFronteir.append(action.puzzle)
+                        exploredFronteirPuzzle.add(tuple(action.puzzle))
 
     # EXER 3 Stuff
 
     def AStarSearch(self) -> State:
-        # initial state
         start = time.time()
+        # initial state
         openList = [State(self.current_puzzle[:], self.emptyIndex, None, None)]
         openListPuzzle = [self.current_puzzle[:]]
         closedList = set()
+        
         while len(openList) != 0:
             # get the minimum f
             Flist = [x.f for x in openList]
@@ -419,7 +430,6 @@ class AppWindow(Gtk.Window):
                         continue
 
                     try:
-                        # puzzleList = [x.puzzle for x in openList]
                         pIndex = openListPuzzle.index(action.puzzle)
                         duplicateState = openList[pIndex]
                         if pIndex >= 0:
