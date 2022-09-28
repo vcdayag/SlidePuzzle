@@ -294,7 +294,11 @@ class AppWindow(Gtk.Window):
                 puzzleOut.write(movestring)
 
             self.solution_list = outputActions
-            self.lblMoves.set_label(movestring)
+            if(len(outputActions) < 100):
+                self.lblMoves.set_label(movestring)
+            else:
+                self.lblMoves.set_label("too much actions to display")
+                
             button.set_label("Next")
 
         else:
